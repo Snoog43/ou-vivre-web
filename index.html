@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Où vivre ?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23c2562f'/><circle cx='16' cy='13' r='5' fill='%23fff3e0'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
+<style>
+/* Mise en page : réglages à gauche (en haut sur mobile), carte + classement à droite */
+:root {
+  --bg: #f7f2ea;          /* sable clair */
+  --surface: #fffdf9;
+  --ink: #2b211b;
+  --muted: #6e6158;
+  --line: #e4d9cb;
+  --accent: #c2562f;      /* terre cuite */
+  --accent-soft: #f6e1d6;
+  --sea: #2c6e83;         /* bleu méditerranée */
+  --good: #2f7d4f;
+  --bad: #b3402a;
+  --warn: #a8660b;
+  --warn-soft: #fbedd5;
+  --cold: #3d7fc4;
+  --hot: #d9572b;
+  --star: #d99a1e;
+  --band: rgba(47,125,79,.12);
+  --f-title: "Fraunces", Georgia, serif;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1512; --surface: #241d19; --ink: #f1e8df; --muted: #b3a597; --line: #3b312a;
+    --accent: #e27a52; --accent-soft: #3d2a21; --sea: #6db3c9; --good: #6cc48f; --bad: #ec7a62;
+    --warn: #e9a94a; --warn-soft: #3a2c17; --cold: #7fb2ea; --hot: #f08a5d; --star: #f0b94a; --band: rgba(108,196,143,.14);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1a1512; --surface: #241d19; --ink: #f1e8df; --muted: #b3a597; --line: #3b312a;
+  --accent: #e27a52; --accent-soft: #3d2a21; --sea: #6db3c9; --good: #6cc48f; --bad: #ec7a62;
+  --warn: #e9a94a; --warn-soft: #3a2c17; --cold: #7fb2ea; --hot: #f08a5d; --star: #f0b94a; --band: rgba(108,196,143,.14);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+header { padding: 28px 20px 12px; max-width: 1280px; margin: 0 auto; }
+h1 { font: 700 clamp(30px, 5vw, 44px)/1.05 var(--f-title); margin: 0; letter-spacing: -.01em; }
+h1 span { color: var(--accent); }
+.sous { color: var(--muted); margin: 6px 0 0; max-width: 70ch; }
+.maj { font-size: 13px; color: var(--muted); margin-top: 8px; }
+main { max-width: 1280px; margin: 0 auto; padding: 8px 20px 40px; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); padding: 8px 16px 40px; } header { padding: 22px 16px 8px; } }
+.panneau { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+aside.panneau { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+@media (max-width: 900px) { aside.panneau { position: static; max-height: none; } }
+h2 { font: 600 19px/1.2 var(--f-title); margin: 0 0 10px; }
+h3 { font: 600 13px/1.2 var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; }
+.profils { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.profils button, .btn { font: 500 13px var(--f-body); padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.profils button:hover, .btn:hover { border-color: var(--accent); }
+.profils button.actif { background: var(--accent); border-color: var(--accent); color: #fff; }
+.crit { display: grid; grid-template-columns: 1fr 96px 22px; align-items: center; gap: 8px; margin: 5px 0; font-size: 14px; }
+.crit output { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.champ { display: grid; grid-template-columns: 1fr 110px; gap: 8px; align-items: center; margin: 6px 0; font-size: 14px; }
+.champ input, select, textarea { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+.coche { display: flex; gap: 8px; align-items: center; margin: 6px 0; font-size: 14px; }
+.aide { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+button.lien { background: none; border: 0; color: var(--accent); font: inherit; font-size: 13px; padding: 0; cursor: pointer; text-decoration: underline; }
+#partageMsg { font-size: 12.5px; color: var(--good); margin-left: 6px; }
+#carte { height: 340px; border-radius: 14px; border: 1px solid var(--line); margin-bottom: 16px; z-index: 0; }
+@media (max-width: 600px) { #carte { height: 260px; } }
+.leaflet-container { background: var(--bg); font-family: var(--f-body); }
+.pin { background: var(--accent); color: #fff; border: 2px solid #fff; border-radius: 50%; width: 26px !important; height: 26px !important; display: grid; place-items: center; font: 600 11px var(--f-body); box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.pin.top { background: var(--good); width: 30px !important; height: 30px !important; font-size: 12px; }
+.pin.bas { background: #9a8b7e; }
+.pin.fav { border-color: var(--star); border-width: 3px; }
+.liste { display: flex; flex-direction: column; gap: 8px; }
+.zone { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.tete { display: grid; grid-template-columns: 1fr auto; align-items: center; }
+.ouvrir { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 6px 12px 14px; min-width: 0; }
+.ouvrir:focus-visible, .actions button:focus-visible { outline: 2px solid var(--accent); border-radius: 10px; }
+.actions { display: flex; flex-direction: column; gap: 2px; padding-right: 8px; }
+.actions button { background: none; border: 0; cursor: pointer; font-size: 18px; line-height: 1; padding: 6px; color: var(--muted); border-radius: 8px; }
+.actions button.on { color: var(--star); }
+.actions button.cmp.on { color: var(--sea); }
+.rang { font: 700 20px/1 var(--f-title); color: var(--accent); text-align: center; }
+.nom { font-weight: 600; }
+.pays { color: var(--muted); font-size: 13px; }
+.barre { height: 6px; background: var(--line); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+.barre i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.note { text-align: right; }
+.note b { font: 700 22px/1 var(--f-title); }
+.note small { display: block; font-size: 12px; color: var(--muted); }
+.delta { font-size: 12px; font-weight: 600; }
+.up { color: var(--good); } .down { color: var(--bad); } .eq { color: var(--muted); }
+.detail { display: none; padding: 0 14px 16px; border-top: 1px solid var(--line); }
+.zone.ouvert .detail { display: block; }
+.desc { margin: 12px 0; }
+.grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.case { background: var(--bg); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+.case .t { display: flex; justify-content: space-between; gap: 6px; font-weight: 600; font-size: 13.5px; }
+.case .v { color: var(--muted); margin-top: 2px; }
+.case .mini { height: 4px; background: var(--line); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+.case .mini i { display: block; height: 100%; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.chip { font-size: 11.5px; padding: 1px 7px; border-radius: 99px; background: var(--accent-soft); color: var(--ink); }
+.chip.alerte { background: var(--warn-soft); color: var(--warn); font-weight: 600; }
+.chip.danger { background: var(--bad); color: #fff; font-weight: 600; }
+.graph { margin: 10px 0 4px; }
+.graph svg { width: 100%; height: auto; display: block; }
+.bandes { display: grid; grid-template-columns: 70px repeat(12, 1fr); gap: 2px; font-size: 11px; margin-top: 6px; align-items: center; }
+.bandes span { text-align: center; border-radius: 3px; padding: 2px 0; color: #fff; font-variant-numeric: tabular-nums; }
+.bandes .lib { text-align: left; color: var(--muted); padding: 0; }
+.legende { font-size: 12px; color: var(--muted); }
+.outils { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.carnet textarea { min-height: 64px; resize: vertical; margin-top: 4px; }
+.vide { padding: 20px; text-align: center; color: var(--muted); }
+section.panneau { margin-top: 20px; }
+#comparaison { margin: 0 0 16px; }
+#comparaison[hidden] { display: none; }
+.tablo { overflow-x: auto; }
+.tablo table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 520px; }
+.tablo th, .tablo td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.tablo th { font-weight: 600; }
+.tablo td.best { background: var(--band); font-weight: 600; }
+.tablo td small { display: block; color: var(--muted); font-weight: 400; }
+#barreCmp { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: var(--sea); color: #fff; border-radius: 99px; padding: 8px 10px 8px 16px; display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 16px rgba(0,0,0,.25); z-index: 10; font-size: 14px; }
+#barreCmp[hidden] { display: none; }
+#barreCmp button { background: #fff; color: var(--sea); border: 0; border-radius: 99px; padding: 5px 12px; font: 600 13px var(--f-body); cursor: pointer; }
+#barreCmp button.x { background: transparent; color: #fff; padding: 5px 6px; }
+.mouv { list-style: none; padding: 0; margin: 0; }
+.mouv li { padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.mouv li:last-child { border: 0; }
+.methode p, .methode li { font-size: 14px; }
+.methode ul { padding-left: 18px; }
+footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 0 16px 30px; }
+a { color: var(--sea); }
+@media print {
+  body { background: #fff; color: #000; }
+  header, aside, #carte, section.panneau, footer, #barreCmp, .actions, .outils, #comparaison { display: none !important; }
+  main { display: block; padding: 0; }
+  body.impression .zone:not(.imprimer) { display: none; }
+  .zone { border: 0; break-inside: avoid; }
+  .zone.imprimer .detail { display: block; }
+  .carnet textarea { border: 0; padding: 0; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Où <span>vivre</span> ?</h1>
+  <p class="sous">Classement de régions du monde selon vos critères. Choisissez un profil ou réglez chaque critère et votre budget : le classement se recalcule aussitôt. Les données se mettent à jour toutes seules chaque semaine, et le classement bouge avec elles.</p>
+  <div class="maj" id="maj"></div>
+</header>
+
+<main>
+  <aside class="panneau" aria-label="Réglages">
+    <h2>Vos critères</h2>
+    <div class="profils" id="profils"></div>
+    <p class="aide">0 = sans importance, 5 = essentiel (une zone très mal notée sur un critère essentiel est pénalisée).</p>
+    <div id="poids"></div>
+
+    <h3>Climat idéal</h3>
+    <div class="champ"><label for="tmin">Température moyenne mini (°C)</label><input id="tmin" type="number" step="1"></div>
+    <div class="champ"><label for="tmax">Température moyenne maxi (°C)</label><input id="tmax" type="number" step="1"></div>
+
+    <h3>Budget</h3>
+    <div class="champ"><label for="revenus">Revenus par mois (€)</label><input id="revenus" type="number" step="100"></div>
+    <div class="champ"><label for="train">Ce que coûte mon train de vie en France (€/mois)</label><input id="train" type="number" step="100"></div>
+    <div class="champ"><label for="achat">Budget pour acheter (€)</label><input id="achat" type="number" step="10000"></div>
+    <div class="champ"><label for="surface">Surface souhaitée (m²)</label><input id="surface" type="number" step="5"></div>
+
+    <h3>Filtres</h3>
+    <label class="coche"><input type="checkbox" id="fUE"> France et Union européenne seulement</label>
+    <label class="coche"><input type="checkbox" id="fFR"> Où l'on parle français</label>
+    <label class="coche"><input type="checkbox" id="fFav"> Mes favoris seulement</label>
+    <div class="champ"><label for="fVol">Vol maximum depuis Paris (h)</label><input id="fVol" type="number" step="1" min="1"></div>
+
+    <h3>Évolution</h3>
+    <div class="champ" style="grid-template-columns:1fr"><label for="comp">Comparer le classement avec :</label><select id="comp"></select></div>
+
+    <h3>Partager</h3>
+    <button class="btn" id="partage">Copier le lien de mes réglages</button><span id="partageMsg" role="status"></span>
+    <p class="aide">La personne qui ouvre ce lien voit exactement votre classement. Favoris et notes restent sur cet appareil.</p>
+
+    <p style="margin-top:16px"><button class="lien" id="reset">Revenir aux réglages de départ</button></p>
+  </aside>
+
+  <div>
+    <div id="carte" role="img" aria-label="Carte des zones classées"></div>
+    <section id="comparaison" class="panneau" hidden aria-label="Comparaison"></section>
+    <div class="liste" id="liste"></div>
+
+    <section class="panneau">
+      <h2>Ce qui a bougé</h2>
+      <p class="aide" id="mouvIntro"></p>
+      <ul class="mouv" id="mouv"></ul>
+    </section>
+
+    <section class="panneau methode">
+      <h2>Comment c'est calculé</h2>
+      <p>Chaque zone reçoit une note de 0 à 100 par critère, puis une moyenne pondérée par vos réglages. Un critère réglé sur 5 (essentiel) retire en plus des points aux zones qui y ont moins de 40.</p>
+      <ul>
+        <li><b>Climat</b> : profil mois par mois sur les 5 dernières années (NASA POWER). Chaque mois hors de votre fourchette fait perdre des points, ainsi que les fortes chaleurs, la chaleur humide et les gros écarts entre été et hiver.</li>
+        <li><b>Soleil</b> : part de ciel sans nuages sur l'année (NASA POWER).</li>
+        <li><b>Air pur</b> : particules fines (PM2,5) mois par mois sur les 12 derniers mois (Copernicus, via Open-Meteo). Repère : l'OMS recommande moins de 5 µg/m³ en moyenne annuelle.</li>
+        <li><b>Santé</b> : pour moitié le pays (espérance de vie, dépenses de santé, Banque mondiale), pour moitié sur place (hôpital de bon niveau à proximité, prise en charge : Sécurité sociale en France et DOM, formulaire S1 dans l'UE pour un retraité français, assurance privée ailleurs).</li>
+        <li><b>Stabilité</b> : stabilité politique, état de droit et efficacité de l'État (Banque mondiale), plus l'inflation et la croissance des 3 dernières années.</li>
+        <li><b>Sécurité</b> : taux d'homicides (Banque mondiale, ONUDC) et niveau d'alerte officiel aux voyageurs du gouvernement du Canada, vérifié chaque semaine. C'est ce dernier qui réagit le plus vite à une crise.</li>
+        <li><b>Coût de la vie</b> : votre train de vie français converti avec le niveau des prix du pays (parités de pouvoir d'achat, Banque mondiale), corrigé pour la ville, comparé à vos revenus.</li>
+        <li><b>Immobilier</b> : prix moyen au m² (ordre de grandeur 2025) multiplié par la surface voulue, comparé à votre budget.</li>
+        <li><b>Fiscalité</b> : imposition d'une pension privée française (régime général + Agirc-Arrco) selon les conventions fiscales et les régimes locaux. Les pensions de fonctionnaires restent en général imposées en France. À faire confirmer par un conseiller.</li>
+        <li><b>Monnaie stable</b> : hors zone euro, variation de la monnaie locale face à l'euro sur un an. Une forte variation rend le budget imprévisible.</li>
+        <li><b>Culture</b> et <b>accueil</b> : appréciations sur 10 (patrimoine, vie culturelle ; réputation d'accueil envers les étrangers). Subjectif, à prendre avec le sourire.</li>
+        <li><b>Installation</b> : libre en France et dans l'UE, possible avec un visa retraité ailleurs, difficile dans quelques pays.</li>
+      </ul>
+      <p>Les données santé, stabilité, homicides, prix et fiscalité sont au niveau du pays (les régions d'un même pays les partagent). Les DOM utilisent les chiffres de la France. Avant toute décision, une visite sur place et un avis fiscal restent indispensables.</p>
+    </section>
+  </div>
+</main>
+<div id="barreCmp" hidden><span id="barreTxt"></span><button id="voirCmp">Comparer</button><button class="x" id="viderCmp" aria-label="Vider la comparaison">✕</button></div>
+<footer>Sources : Banque mondiale (WDI, WGI), NASA POWER, Copernicus CAMS (Open-Meteo), Gouvernement du Canada (conseils aux voyageurs), taux de change currency-api. Prix immobiliers et appréciations : estimations à vérifier.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>
+<script>
+const CRITERES = [
+  { k: "climat", nom: "Climat", def: 5 },
+  { k: "soleil", nom: "Soleil", def: 2 },
+  { k: "air", nom: "Air pur", def: 2 },
+  { k: "sante", nom: "Santé", def: 5 },
+  { k: "stab", nom: "Stabilité", def: 4 },
+  { k: "secu", nom: "Sécurité", def: 3 },
+  { k: "culture", nom: "Culture", def: 3 },
+  { k: "cout", nom: "Coût de la vie", def: 4 },
+  { k: "immo", nom: "Immobilier", def: 3 },
+  { k: "fiscal", nom: "Fiscalité", def: 3 },
+  { k: "monnaie", nom: "Monnaie stable", def: 1 },
+  { k: "accueil", nom: "Accueil", def: 2 },
+  { k: "install", nom: "Installation", def: 2 },
+  { k: "proxi", nom: "Proche de la France", def: 2 },
+];
+// Profils : poids dans l'ordre de CRITERES
+const PROFILS = [
+  { id: "equilibre", nom: "Équilibré", p: CRITERES.map(c => c.def) },
+  { id: "soleil", nom: "Soleil pas cher", p: [5, 4, 2, 3, 3, 3, 1, 5, 5, 4, 2, 2, 1, 1] },
+  { id: "famille", nom: "Près de la famille", p: [4, 2, 2, 4, 3, 3, 2, 3, 3, 2, 1, 2, 5, 5] },
+  { id: "sante", nom: "Santé avant tout", p: [3, 1, 4, 5, 4, 5, 2, 3, 2, 2, 1, 2, 3, 3] },
+  { id: "culture", nom: "Vie culturelle", p: [4, 2, 2, 4, 3, 3, 5, 3, 2, 2, 1, 3, 2, 3] },
+];
+const DEFAUT = { tmin: 19, tmax: 27, revenus: 2000, train: 2000, achat: 200000, surface: 70,
+  fUE: false, fFR: false, fFav: false, fVol: 24, poids: Object.fromEntries(CRITERES.map(c => [c.k, c.def])) };
+const CLE = "ou-vivre-reglages", CLE_FAV = "ou-vivre-favoris", CLE_NOTES = "ou-vivre-notes";
+
+const lire = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+let D, carte, calque;
+/* Réglages venus de l'appareil ou d'un lien : seules les clés connues, en nombres ou booléens */
+function nettoyer(src) {
+  const r = structuredClone(DEFAUT);
+  if (!src || typeof src !== "object") return r;
+  for (const k of ["tmin", "tmax", "revenus", "train", "achat", "surface", "fVol"])
+    if (Number.isFinite(+src[k]) && src[k] !== "" && src[k] !== null) r[k] = +src[k];
+  for (const k of ["fUE", "fFR", "fFav"]) r[k] = src[k] === true;
+  for (const c of CRITERES) {
+    const x = src.poids && src.poids[c.k];
+    if (x != null && Number.isFinite(+x)) r.poids[c.k] = Math.max(0, Math.min(5, Math.round(+x)));
+  }
+  return r;
+}
+let R = nettoyer(lire(CLE, {}));
+// Un lien partagé (#r=...) remplace les réglages de l'appareil
+if (location.hash.startsWith("#r=")) {
+  try { R = nettoyer(JSON.parse(decodeURIComponent(location.hash.slice(3)))); } catch (e) {}
+  history.replaceState(null, "", location.pathname);
+}
+const FAV = new Set(lire(CLE_FAV, []));
+const NOTES = lire(CLE_NOTES, {});
+const CMP = new Set();
+const sauver = () => ecrire(CLE, R);
+
+const lin = (x, a, b) => Math.max(0, Math.min(100, (x - a) / (b - a) * 100));
+const nf = (x, d = 0) => x.toLocaleString("fr-FR", { maximumFractionDigits: d, minimumFractionDigits: d });
+const v = o => o ? o.v : null;
+const moy = a => a.reduce((s, x) => s + x, 0) / a.length;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const MOIS = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+const MONNAIES_FIXES = new Set(["eur", "xof", "cve"]);  // euro ou parité fixe avec l'euro
+const AVIS = ["Précautions normales", "Grande prudence", "Éviter les voyages non essentiels", "Éviter tout voyage"];
+
+/* Un ancien instantané n'a pas toujours toutes les données : on complète avec l'actuel */
+function complet(inst) {
+  const cur = D.instantanes[D.instantanes.length - 1];
+  if (inst === cur) return inst;
+  const pays = {};
+  for (const iso in cur.pays) pays[iso] = { ...cur.pays[iso], ...Object.fromEntries(Object.entries(inst.pays[iso] || {}).filter(([, x]) => x)) };
+  const climat = {}, local = {};
+  for (const id in cur.climat) climat[id] = { ...cur.climat[id], ...(inst.climat[id] || {}) };
+  for (const id in cur.local) local[id] = { ...cur.local[id], ...Object.fromEntries(Object.entries((inst.local || {})[id] || {}).filter(([, x]) => x)) };
+  return { ...inst, pays, climat, local };
+}
+
+/* Notes 0-100 par critère pour une zone, avec les données d'un instantané */
+function notes(z, inst) {
+  const P = inst.pays[z.iso3] || {}, C = inst.climat[z.id], L = (inst.local || {})[z.id] || {}, n = {}, info = {};
+  if (C) {
+    let s = 0;
+    for (let m = 0; m < 12; m++) {
+      const t = C.t[m], tx = C.tx[m], h = C.h[m];
+      let sm = 100;
+      if (t < R.tmin) sm -= (R.tmin - t) * 12;
+      if (t > R.tmax) sm -= (t - R.tmax) * 12;
+      if (tx > R.tmax + 5) sm -= (tx - R.tmax - 5) * 6;
+      if (t > 24 && h > 75) sm -= (h - 75) * 1.5;
+      s += Math.max(0, sm);
+    }
+    s /= 12;
+    const ampl = Math.max(...C.t) - Math.min(...C.t);
+    s -= Math.max(0, ampl - 8) * 2;
+    const pluie = C.p.reduce((a, b) => a + b, 0);
+    s -= Math.max(0, pluie - 1500) / 100;
+    n.climat = Math.max(0, Math.min(100, s));
+    info.climat = `${nf(Math.min(...C.t),1)} à ${nf(Math.max(...C.t),1)} °C en moyenne selon le mois, ${nf(pluie)} mm de pluie par an`;
+    if (C.n) {
+      const clair = 100 - moy(C.n);
+      n.soleil = lin(clair, 35, 75);
+      info.soleil = `Ciel dégagé ${nf(clair)} % du temps sur l'année`;
+    }
+  }
+  if (L.air && L.air.every(x => x != null)) {
+    const a = moy(L.air), pire = Math.max(...L.air);
+    n.air = .7 * lin(-a, -35, -5) + .3 * lin(-pire, -75, -15);
+    info.air = `Particules fines : ${nf(a,1)} µg/m³ en moyenne, ${nf(pire)} le pire mois (${MOIS_LONG[L.air.indexOf(pire)]})`;
+  }
+  if (P.esp && P.sante) {
+    const pays = .5 * lin(v(P.esp), 72, 84) + .5 * lin(Math.log10(v(P.sante)), 2, 3.7);
+    const couv = z.iso3 === "FRA" ? 100 : z.acces === "ue" ? 85 : 40;
+    n.sante = .5 * pays + .3 * z.hopital * 50 + .2 * couv;
+    info.sante = `${["Soins limités sur place, évacuation parfois nécessaire", "Hôpital correct, soins pointus à plus d'une heure", "Hôpital de bon niveau sur place"][z.hopital]}. ` +
+      `${z.iso3 === "FRA" ? "Sécurité sociale" : z.acces === "ue" ? "Prise en charge via le formulaire S1" : "Assurance santé privée à prévoir"}. ` +
+      `Soignants : ${{ fr: "français courant", en: "anglais courant dans le privé", local: "surtout langue locale" }[z.langue_soins]}. ` +
+      `Espérance de vie ${nf(v(P.esp),1)} ans (${P.esp.a}).`;
+  }
+  if (P.pv && P.rl && P.ge) {
+    const pol = lin((v(P.pv) + v(P.rl) + v(P.ge)) / 3, 30, 90);
+    const infl = P.infl ? Math.max(0, 100 - Math.max(0, Math.abs(v(P.infl) - 2) - 1) * 12) : pol;
+    const cr = P.crois ? lin(v(P.crois), -2, 3) : pol;
+    n.stab = .6 * pol + .25 * infl + .15 * cr;
+    info.stab = `Stabilité politique ${nf(v(P.pv))}/100, état de droit ${nf(v(P.rl))}/100 (${P.pv.a})` +
+      (P.infl ? `, inflation ${nf(v(P.infl),1)} %/an` : "") + (P.crois ? `, croissance ${nf(v(P.crois),1)} %/an` : "");
+  }
+  const homic = P.homic ? lin(-Math.log10(Math.max(.1, v(P.homic))), -Math.log10(30), -Math.log10(.5)) : null;
+  const A = L.avis;
+  const avis = A ? Math.max(0, [100, 80, 25, 0][A.n] - (A.reg ? 10 : 0)) : null;
+  if (homic != null || avis != null) {
+    n.secu = homic != null && avis != null ? .6 * homic + .4 * avis : homic ?? avis;
+    info.secu = (P.homic ? `${nf(v(P.homic),1)} homicides pour 100 000 habitants (${P.homic.a}). ` : "") +
+      (A ? `Alerte voyageurs : ${AVIS[A.n].toLowerCase()}${A.reg ? ", avec des zones à éviter" : ""}.` : "");
+  }
+  n.culture = z.culture * 10; info.culture = `${z.culture}/10`;
+  if (P.prix) {
+    const cout = R.train * v(P.prix) * z.cout_local;
+    n.cout = lin(R.revenus / cout, .7, 1.6);
+    info.cout = `Votre train de vie y coûterait environ ${nf(Math.round(cout / 10) * 10)} € par mois (prix ${nf(v(P.prix) * z.cout_local * 100)} % de la France)`;
+  }
+  const prixLogement = z.prix_m2 * R.surface;
+  n.immo = lin(R.achat / prixLogement, .5, 1.5);
+  info.immo = `${nf(R.surface)} m² ≈ ${nf(Math.round(prixLogement / 1000))} 000 € (≈ ${nf(z.prix_m2)} €/m²)`;
+  const F = D.fiscalite[z.iso3];
+  if (F) { n.fiscal = F.note * 10; info.fiscal = `${F.resume} <a href="${esc(F.source)}" target="_blank" rel="noopener">Source</a>`; }
+  if (P.monnaie) {
+    const M = P.monnaie;
+    if (MONNAIES_FIXES.has(M.code)) { n.monnaie = 100; info.monnaie = M.code === "eur" ? "Euro" : `Monnaie à parité fixe avec l'euro (1 € = ${nf(M.v, 2)} ${M.code.toUpperCase()})`; }
+    else {
+      const varia = (M.v / M.v1 - 1) * 100;
+      n.monnaie = Math.max(0, 100 - Math.abs(varia) * 4);
+      info.monnaie = `1 € = ${nf(M.v, M.v < 10 ? 2 : 0)} ${M.code.toUpperCase()}. Sur un an, l'euro a ${varia >= 0 ? "gagné" : "perdu"} ${nf(Math.abs(varia), 1)} % ${varia >= 0 ? "(votre pension y vaut plus)" : "(votre pension y vaut moins)"}`;
+    }
+  }
+  n.accueil = z.accueil * 10; info.accueil = `${z.accueil}/10`;
+  n.install = { ue: 100, visa: 55, difficile: 15 }[z.acces];
+  info.install = { ue: "Installation libre (France ou UE)", visa: "Visa retraité ou résident accessible", difficile: "Visa long séjour difficile à obtenir" }[z.acces];
+  n.proxi = lin(z.vol, 14, 2); info.proxi = `≈ ${nf(z.vol,1)} h de vol depuis Paris`;
+  return { n, info, avis: A };
+}
+const MOIS_LONG = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+
+function total(n) {
+  let s = 0, w = 0;
+  for (const c of CRITERES) {
+    const p = R.poids[c.k];
+    if (p > 0 && n[c.k] != null) { s += p * n[c.k]; w += p; }
+  }
+  if (!w) return 0;
+  // Un critère « essentiel » (5) mal noté fait chuter la zone, même si le reste est bon
+  const malus = CRITERES.reduce((m, c) => m + (R.poids[c.k] === 5 && n[c.k] != null ? Math.max(0, 40 - n[c.k]) * .5 : 0), 0);
+  return Math.max(0, s / w - malus);
+}
+
+const garde = z => (!R.fUE || z.acces === "ue") && (!R.fFR || z.fr) && (!R.fFav || FAV.has(z.id)) && z.vol <= R.fVol;
+function classer(inst, zones = D.zones.filter(garde)) {
+  const I = complet(inst);
+  return zones.map(z => { const r = notes(z, I); return { z, ...r, score: total(r.n) }; })
+    .sort((a, b) => b.score - a.score);
+}
+
+const couleur = s => s >= 70 ? "var(--good)" : s >= 45 ? "var(--accent)" : "var(--bad)";
+
+function graphique(C) {
+  const W = 360, H = 130, g = 22, b = 18, lo = Math.min(-5, ...C.tn), hi = Math.max(40, ...C.tx);
+  const y = t => H - b - (t - lo) / (hi - lo) * (H - b - 8);
+  const lw = (W - g) / 12;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Températures mois par mois">`;
+  s += `<rect x="${g}" y="${y(R.tmax)}" width="${W - g}" height="${y(R.tmin) - y(R.tmax)}" fill="var(--band)"/>`;
+  for (const t of [0, 10, 20, 30, 40]) if (t >= lo && t <= hi)
+    s += `<line x1="${g}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${g - 4}" y="${y(t) + 4}" font-size="10" text-anchor="end" fill="var(--muted)">${t}°</text>`;
+  for (let m = 0; m < 12; m++) {
+    const x = g + m * lw + lw / 2;
+    s += `<line x1="${x}" x2="${x}" y1="${y(C.tx[m])}" y2="${y(C.tn[m])}" stroke="var(--muted)" stroke-opacity=".3" stroke-width="7" stroke-linecap="round"/>`;
+    const col = C.t[m] < R.tmin ? "var(--cold)" : C.t[m] > R.tmax ? "var(--hot)" : "var(--good)";
+    s += `<circle cx="${x}" cy="${y(C.t[m])}" r="4" fill="${col}"><title>${MOIS_LONG[m]} : ${nf(C.t[m],1)} °C (${nf(C.tn[m],1)} à ${nf(C.tx[m],1)}), ${nf(C.p[m])} mm</title></circle>`;
+    s += `<text x="${x}" y="${H - 4}" font-size="10" text-anchor="middle" fill="var(--muted)">${MOIS[m]}</text>`;
+  }
+  return s + "</svg>";
+}
+
+/* Bandes mois par mois : ciel dégagé et particules fines */
+function bandes(C, L) {
+  let s = "";
+  if (C && C.n) s += `<div class="bandes"><span class="lib">Ciel dégagé</span>${C.n.map((x, m) => {
+    const c = 100 - x; return `<span style="background:hsl(42 ${Math.round(c)}% ${Math.round(62 - c / 5)}%)" title="${MOIS_LONG[m]} : ${nf(c)} % de ciel dégagé">${nf(c)}</span>`; }).join("")}</div>`;
+  if (L && L.air) s += `<div class="bandes"><span class="lib">PM2,5</span>${L.air.map((x, m) => {
+    const col = x == null ? "#999" : x <= 10 ? "#2f7d4f" : x <= 15 ? "#6c9a3a" : x <= 25 ? "#c08a1e" : x <= 35 ? "#c8612a" : "#b3402a";
+    return `<span style="background:${col}" title="${MOIS_LONG[m]} : ${x == null ? "n.d." : nf(x, 1) + " µg/m³"}">${x == null ? "–" : nf(x)}</span>`; }).join("")}</div>`;
+  return s ? s + `<div class="legende">Par mois : part de ciel sans nuages (%) et particules fines (µg/m³, vert = air sain).</div>` : "";
+}
+
+/* Courbe de la note globale de la zone à travers les instantanés */
+function evolution(z) {
+  if (D.instantanes.length < 2) return "";
+  const pts = D.instantanes.map(i => ({ d: i.label, s: total(notes(z, complet(i)).n) }));
+  const W = 360, H = 70, lo = Math.min(...pts.map(p => p.s)) - 5, hi = Math.max(...pts.map(p => p.s)) + 5;
+  const x = i => 30 + i * (W - 60) / (pts.length - 1), y = s => H - 14 - (s - lo) / (hi - lo || 1) * (H - 28);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Évolution de la note"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts.map((p, i) => `${x(i)},${y(p.s)}`).join(" ")}"/>`;
+  pts.forEach((p, i) => s += `<circle cx="${x(i)}" cy="${y(p.s)}" r="3.5" fill="var(--accent)"><title>${esc(p.d)} : ${nf(p.s)}/100</title></circle>`);
+  s += `<text x="${x(0)}" y="${H - 2}" font-size="10" fill="var(--muted)">${esc(pts[0].d)}</text><text x="${x(pts.length - 1)}" y="${H - 2}" font-size="10" text-anchor="end" fill="var(--muted)">Aujourd'hui : ${nf(pts.at(-1).s)}</text></svg>`;
+  return `<h3>Évolution de la note</h3><div class="graph">${s}</div>`;
+}
+
+function badgeAvis(A) {
+  // Le niveau 1 (« grande prudence ») concerne aussi la France : badge seulement à partir du niveau 2
+  if (!A || A.n < 2) return "";
+  return `<span class="chip danger">${AVIS[A.n]}</span>`;
+}
+
+function rendre() {
+  const inst = D.instantanes[D.instantanes.length - 1];
+  const compIdx = +document.getElementById("comp").value;
+  const ancien = compIdx >= 0 && compIdx < D.instantanes.length - 1 ? classer(D.instantanes[compIdx]) : null;
+  const rangAncien = ancien ? Object.fromEntries(ancien.map((r, i) => [r.z.id, { rang: i + 1, r }])) : {};
+  const liste = classer(inst);
+  const ouverts = new Set([...document.querySelectorAll(".zone.ouvert")].map(e => e.dataset.id));
+  document.querySelectorAll(".profils button").forEach(b => {
+    const p = PROFILS.find(p => p.id === b.dataset.id);
+    b.classList.toggle("actif", CRITERES.every((c, i) => R.poids[c.k] === p.p[i]));
+  });
+
+  document.getElementById("liste").innerHTML = liste.length ? liste.map((r, i) => {
+    const a = rangAncien[r.z.id], id = r.z.id, ouvert = ouverts.has(id);
+    let d = "";
+    if (a) {
+      const diff = a.rang - (i + 1);
+      d = diff > 0 ? `<span class="delta up">▲ ${diff}</span>` : diff < 0 ? `<span class="delta down">▼ ${-diff}</span>` : `<span class="delta eq">=</span>`;
+    }
+    const forts = CRITERES.filter(c => R.poids[c.k] > 0 && r.n[c.k] >= 80).map(c => `<span class="chip">${c.nom}</span>`).join("");
+    const cases = CRITERES.map(c => {
+      const s = r.n[c.k];
+      if (s == null) return `<div class="case"><div class="t"><span>${c.nom}</span><span>n.d.</span></div><div class="v">Donnée indisponible</div></div>`;
+      const sa = a && a.r.n[c.k] != null ? s - a.r.n[c.k] : 0;
+      const ev = Math.abs(sa) >= 1 ? ` <span class="delta ${sa > 0 ? "up" : "down"}">${sa > 0 ? "+" : ""}${nf(sa)}</span>` : "";
+      return `<div class="case"><div class="t"><span>${c.nom}${R.poids[c.k] ? "" : " <small>(ignoré)</small>"}</span><span>${nf(s)}${ev}</span></div>
+        <div class="mini"><i style="width:${s}%;background:${couleur(s)}"></i></div><div class="v">${r.info[c.k]}</div></div>`;
+    }).join("");
+    const C = inst.climat[id], L = inst.local[id];
+    const lienAvis = r.avis ? ` <a href="https://voyage.gc.ca/destinations/${esc(r.avis.slug)}" target="_blank" rel="noopener">Conseils aux voyageurs (${r.avis.date.split("-").reverse().join("/")})</a>` : "";
+    return `<div class="zone${ouvert ? " ouvert" : ""}" data-id="${id}">
+      <div class="tete"><button class="ouvrir" aria-expanded="${ouvert}"><div class="rang">${i + 1}</div>
+        <div style="min-width:0"><div class="nom">${r.z.nom}</div><div class="pays">${r.z.pays}${r.z.fr ? " · francophone" : ""}</div>
+          <div class="barre"><i style="width:${r.score}%"></i></div><div class="chips">${badgeAvis(r.avis)}${forts}</div></div>
+        <div class="note"><b>${nf(r.score)}</b><small>/100</small>${d}</div></button>
+        <div class="actions"><button class="fav${FAV.has(id) ? " on" : ""}" data-id="${id}" aria-pressed="${FAV.has(id)}" title="Favori" aria-label="Ajouter ${esc(r.z.nom)} aux favoris">${FAV.has(id) ? "★" : "☆"}</button>
+          <button class="cmp${CMP.has(id) ? " on" : ""}" data-id="${id}" aria-pressed="${CMP.has(id)}" title="Ajouter à la comparaison" aria-label="Comparer ${esc(r.z.nom)}">⇄</button></div></div>
+      <div class="detail"><p class="desc">${r.z.desc}${lienAvis}</p>
+        ${C ? `<div class="graph">${graphique(C)}</div><div class="legende">Température moyenne de chaque mois (point) et écart entre nuits et journées (barre), ${C.periode}. Bande verte : votre fourchette idéale.</div>` : ""}
+        ${bandes(C, L)}
+        <h3>Détail des notes${a ? " (écart avec l'instantané comparé)" : ""}</h3><div class="grille">${cases}</div>
+        ${ouvert ? evolution(r.z) : `<div class="evo" data-id="${id}"></div>`}
+        <div class="carnet"><h3><label for="note-${id}">Mon carnet</label></h3><textarea id="note-${id}" data-id="${id}" placeholder="Impressions, visite prévue, contacts…">${esc(NOTES[id] || "")}</textarea></div>
+        <div class="outils"><button class="btn imprimer" data-id="${id}">Imprimer la fiche</button></div></div></div>`;
+  }).join("") : `<div class="vide">Aucune zone ne correspond aux filtres.</div>`;
+
+  document.querySelectorAll(".ouvrir").forEach(btn => btn.onclick = () => {
+    const z = btn.closest(".zone"); z.classList.toggle("ouvert"); btn.setAttribute("aria-expanded", z.classList.contains("ouvert"));
+    const evo = z.querySelector(".evo");
+    if (evo) evo.outerHTML = evolution(D.zones.find(x => x.id === z.dataset.id));
+  });
+  document.querySelectorAll(".actions .fav").forEach(b => b.onclick = () => {
+    FAV.has(b.dataset.id) ? FAV.delete(b.dataset.id) : FAV.add(b.dataset.id); ecrire(CLE_FAV, [...FAV]); rendre();
+  });
+  document.querySelectorAll(".actions .cmp").forEach(b => b.onclick = () => {
+    if (CMP.has(b.dataset.id)) CMP.delete(b.dataset.id); else if (CMP.size < 4) CMP.add(b.dataset.id); else return alert("4 zones au maximum dans la comparaison.");
+    rendre();
+  });
+  document.querySelectorAll(".carnet textarea").forEach(t => t.oninput = () => {
+    if (t.value.trim()) NOTES[t.dataset.id] = t.value; else delete NOTES[t.dataset.id]; ecrire(CLE_NOTES, NOTES);
+  });
+  document.querySelectorAll(".imprimer").forEach(b => b.onclick = () => {
+    const z = b.closest(".zone"); z.classList.add("imprimer", "ouvert"); document.body.classList.add("impression");
+    const evo = z.querySelector(".evo"); if (evo) evo.outerHTML = evolution(D.zones.find(x => x.id === z.dataset.id));
+    window.print();
+  });
+
+  // Carte
+  calque.clearLayers();
+  liste.forEach((r, i) => {
+    const cls = (i < 5 ? "pin top" : i >= liste.length * .66 ? "pin bas" : "pin") + (FAV.has(r.z.id) ? " fav" : "");
+    L.marker([r.z.lat, r.z.lon], { icon: L.divIcon({ className: cls, html: i + 1, iconSize: null }), zIndexOffset: 1000 - i })
+      .bindTooltip(`${i + 1}. ${r.z.nom} : ${nf(r.score)}/100`).on("click", () => {
+        const el = document.querySelector(`.zone[data-id="${r.z.id}"]`);
+        if (!el.classList.contains("ouvert")) el.querySelector(".ouvrir").click();
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }).addTo(calque);
+  });
+
+  rendreComparaison(inst);
+
+  // Ce qui a bougé
+  const mouv = document.getElementById("mouv"), intro = document.getElementById("mouvIntro");
+  if (!ancien) { intro.textContent = "Choisissez un instantané à comparer dans les réglages."; mouv.innerHTML = ""; return; }
+  intro.textContent = `Entre « ${D.instantanes[compIdx].label} » et aujourd'hui, avec vos réglages :`;
+  const evts = [];
+  liste.forEach((r, i) => {
+    const a = rangAncien[r.z.id]; if (!a) return;
+    const diff = a.rang - (i + 1);
+    const crit = CRITERES.filter(c => r.n[c.k] != null && a.r.n[c.k] != null)
+      .map(c => ({ c, d: r.n[c.k] - a.r.n[c.k] })).filter(x => Math.abs(x.d) >= 3)
+      .sort((x, y) => Math.abs(y.d) - Math.abs(x.d)).slice(0, 2);
+    const avisChange = r.avis && a.r.avis && (r.avis.n !== a.r.avis.n || r.avis.reg !== a.r.avis.reg);
+    if (Math.abs(diff) >= 2 || crit.length || avisChange)
+      evts.push({ r, diff, crit, avisChange, poids: Math.abs(diff) * 3 + crit.reduce((s, x) => s + Math.abs(x.d), 0) + (avisChange ? 50 : 0) });
+  });
+  evts.sort((x, y) => y.poids - x.poids);
+  mouv.innerHTML = evts.slice(0, 12).map(e => {
+    const rang = e.diff ? `<span class="delta ${e.diff > 0 ? "up" : "down"}">${e.diff > 0 ? "gagne" : "perd"} ${Math.abs(e.diff)} place${Math.abs(e.diff) > 1 ? "s" : ""}</span>` : `<span class="delta eq">même place</span>`;
+    const raisons = e.crit.map(x => `${x.c.nom.toLowerCase()} ${x.d > 0 ? "+" : ""}${nf(x.d)}`).join(", ");
+    const av = e.avisChange ? ` · <b>alerte voyageurs : ${AVIS[e.r.avis.n].toLowerCase()}</b>` : "";
+    return `<li><b>${e.r.z.nom}</b> ${rang}${raisons ? ` · ${raisons}` : ""}${av}</li>`;
+  }).join("") || "<li>Pas de changement notable.</li>";
+}
+
+let cmpVisible = false;
+function rendreComparaison(inst) {
+  const barre = document.getElementById("barreCmp"), sec = document.getElementById("comparaison");
+  barre.hidden = CMP.size === 0;
+  document.getElementById("barreTxt").textContent = `${CMP.size} zone${CMP.size > 1 ? "s" : ""} à comparer`;
+  if (!cmpVisible || CMP.size === 0) { sec.hidden = true; return; }
+  const rs = classer(inst, D.zones.filter(z => CMP.has(z.id)));
+  const ligne = (nom, val, fmt) => {
+    const vals = rs.map(val), best = Math.max(...vals.filter(x => x != null));
+    return `<tr><th>${nom}</th>${rs.map((r, i) => `<td class="${vals[i] === best && rs.length > 1 ? "best" : ""}">${fmt(r, vals[i])}</td>`).join("")}</tr>`;
+  };
+  sec.hidden = false;
+  sec.innerHTML = `<h2>Comparaison</h2><div class="tablo"><table>
+    <tr><th></th>${rs.map(r => `<th>${r.z.nom}<small style="display:block;color:var(--muted);font-weight:400">${r.z.pays}</small></th>`).join("")}</tr>
+    ${ligne("Note globale", r => r.score, (r, x) => `<b>${nf(x)}</b>/100`)}
+    ${CRITERES.map(c => ligne(c.nom, r => r.n[c.k] ?? null, (r, x) => x == null ? "n.d." : `${nf(x)}<small>${r.info[c.k]}</small>`)).join("")}
+    <tr><th>Températures</th>${rs.map(r => `<td>${inst.climat[r.z.id] ? graphique(inst.climat[r.z.id]) : ""}</td>`).join("")}</tr>
+  </table></div><p class="aide">En vert : la meilleure des zones comparées sur la ligne.</p>`;
+}
+
+function lierReglages() {
+  document.getElementById("profils").innerHTML = PROFILS.map(p => `<button data-id="${p.id}">${p.nom}</button>`).join("");
+  document.querySelectorAll("#profils button").forEach(b => b.onclick = () => {
+    const p = PROFILS.find(p => p.id === b.dataset.id);
+    CRITERES.forEach((c, i) => R.poids[c.k] = p.p[i]); sauver(); lierReglages(); rendre();
+  });
+  document.getElementById("poids").innerHTML = CRITERES.map(c =>
+    `<div class="crit"><label for="w-${c.k}">${c.nom}</label><input type="range" min="0" max="5" step="1" id="w-${c.k}" value="${R.poids[c.k]}"><output id="o-${c.k}">${R.poids[c.k]}</output></div>`).join("");
+  CRITERES.forEach(c => document.getElementById("w-" + c.k).oninput = e => {
+    R.poids[c.k] = +e.target.value; document.getElementById("o-" + c.k).textContent = e.target.value; sauver(); rendre();
+  });
+  for (const k of ["tmin", "tmax", "revenus", "train", "achat", "surface", "fVol"]) {
+    const el = document.getElementById(k); el.value = R[k];
+    el.oninput = () => { if (el.value !== "" && !isNaN(+el.value)) { R[k] = +el.value; sauver(); rendre(); } };
+  }
+  for (const k of ["fUE", "fFR", "fFav"]) {
+    const el = document.getElementById(k); el.checked = R[k];
+    el.onchange = () => { R[k] = el.checked; sauver(); rendre(); };
+  }
+}
+
+document.getElementById("reset").onclick = () => { R = structuredClone(DEFAUT); sauver(); lierReglages(); rendre(); };
+document.getElementById("partage").onclick = async () => {
+  const url = location.origin + location.pathname + "#r=" + encodeURIComponent(JSON.stringify(R));
+  const msg = document.getElementById("partageMsg");
+  try { await navigator.clipboard.writeText(url); msg.textContent = "Lien copié !"; }
+  catch (e) { prompt("Copiez ce lien :", url); msg.textContent = ""; }
+  setTimeout(() => msg.textContent = "", 3000);
+};
+document.getElementById("voirCmp").onclick = () => { cmpVisible = true; rendreComparaison(D.instantanes.at(-1)); document.getElementById("comparaison").scrollIntoView({ behavior: "smooth" }); };
+document.getElementById("viderCmp").onclick = () => { CMP.clear(); cmpVisible = false; rendre(); };
+addEventListener("afterprint", () => { document.body.classList.remove("impression"); document.querySelectorAll(".zone.imprimer").forEach(z => z.classList.remove("imprimer")); });
+
+fetch("donnees.json", { cache: "no-cache" }).then(r => r.json()).then(d => {
+  D = d;
+  const dern = D.instantanes[D.instantanes.length - 1];
+  document.getElementById("maj").textContent = `Données vérifiées le ${new Date(D.verifie).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} · ${D.zones.length} zones · climat ${dern.climat[D.zones[0].id].periode}`;
+  const sel = document.getElementById("comp");
+  sel.innerHTML = `<option value="-1">Pas de comparaison</option>` +
+    D.instantanes.slice(0, -1).map((s, i) => `<option value="${i}">${s.label}</option>`).reverse().join("");
+  sel.value = D.instantanes.length > 2 ? D.instantanes.length - 2 : 0;
+  sel.onchange = rendre;
+
+  carte = L.map("carte", { worldCopyJump: true, scrollWheelZoom: false }).setView([25, 10], 2);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 10, attribution: "© OpenStreetMap" }).addTo(carte);
+  calque = L.layerGroup().addTo(carte);
+  lierReglages();
+  rendre();
+}).catch(e => { document.getElementById("liste").innerHTML = `<div class="vide">Impossible de charger les données (${e.message}).</div>`; });
+</script>
+</body>
+</html>
